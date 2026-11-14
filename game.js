@@ -48,7 +48,7 @@
       ante: 1, blindIdx: 0, money: 4, jokers: [],
       roundScore: 0, target: 0, handsMax: BASE_HANDS, handsUsed: 0,
       secret: '', guesses: [], keyState: {}, over: false, wonRun: false,
-      boss: null, noYellowChips: false, shop: null,
+      boss: null, noYellowChips: false, shop: null, currentGuess: '',
     };
   }
 
@@ -104,12 +104,9 @@
     G.handsMax = hands;
     G.secret = chooseSecret(G.boss);
     G.target = targetFor(G.ante, G.blindIdx, G.boss);
+    G.currentGuess = G.secret[0];
     renderAll();
     setMessage(`Mot de ${G.secret.length} lettres. Première lettre : ${G.secret[0]}`);
-    $('guess-input').disabled = false;
-    $('guess-btn').disabled = false;
-    $('guess-input').value = G.secret[0];
-    $('guess-input').focus();
   }
 
   function scoreGuess(guess, fb) {
@@ -142,7 +139,7 @@
   function submitGuess() {
     if (G.over || G.wonRun || G.shop) return;
     if (G.handsUsed >= G.handsMax) return;
-    let raw = norm($('guess-input').value);
+    let raw = norm(G.currentGuess || '');
     if (raw.length !== G.secret.length) { setMessage(`Le mot doit faire ${G.secret.length} lettres.`); return; }
     if (raw[0] !== G.secret[0]) { setMessage(`La première lettre doit être ${G.secret[0]}.`); return; }
     // accept any A-Z word of correct length/first letter (relaxed dictionary for MVP)
@@ -163,20 +160,18 @@
     if (G.roundScore >= G.target) {
       endBlind(true, found);
     } else if (found) {
-      // found but not enough score - rare, treat as fail blind attempt? keep playing if hands left
       if (G.handsUsed >= G.handsMax) endBlind(false, true);
-      else { $('guess-input').value = G.secret[0]; $('guess-input').focus(); }
+      else { G.currentGuess = G.secret[0]; renderBoard(); }
     } else if (G.handsUsed >= G.handsMax) {
       endBlind(false, false);
     } else {
-      $('guess-input').value = G.secret[0];
-      $('guess-input').focus();
+      G.currentGuess = G.secret[0];
+      renderBoard();
     }
   }
 
   function endBlind(win, found) {
-    $('guess-input').disabled = true;
-    $('guess-btn').disabled = true;
+    G.currentGuess = '';
     if (win) {
       const baseReward = [3,4,5][G.blindIdx];
       const handBonus = G.handsMax - G.handsUsed;
@@ -308,7 +303,8 @@
     const board = $('board');
     board.innerHTML = '';
     const len = G.secret ? G.secret.length : 6;
-    const rowsToShow = Math.max(G.guesses.length + (G.handsUsed < G.handsMax && !G.over && !G.wonRun ? 1 : 0), 1);
+    const active = (G.handsUsed < G.handsMax && !G.over && !G.wonRun && !G.shop);
+    const rowsToShow = Math.max(G.guesses.length + (active ? 1 : 0), 1);
     for (let r=0; r<rowsToShow; r++) {
       const row = document.createElement('div'); row.className = 'row';
       const g = G.guesses[r];
@@ -317,9 +313,12 @@
         if (g) {
           t.textContent = g.word[c];
           t.classList.add(g.fb[c]);
-        } else if (r === G.guesses.length) {
-          // active row hint: show first letter
-          if (c === 0) { t.textContent = G.secret[0]; t.classList.add('correct'); }
+        } else if (r === G.guesses.length && active) {
+          const cg = (G.currentGuess || G.secret[0] || '').padEnd(len, ' ');
+          const ch = cg[c];
+          if (ch && ch !== ' ') t.textContent = ch;
+          if (c === 0) t.classList.add('correct');
+          if (c === (G.currentGuess || '').length && (G.currentGuess || '').length < len) t.classList.add('active');
         }
         row.appendChild(t);
       }
@@ -352,38 +351,34 @@
 
   // --- Input ---
   function onKey(k) {
-    if (G.over || G.wonRun || G.shop) return;
-    const inp = $('guess-input');
+    if (!G || G.over || G.wonRun || G.shop) return;
+    if (!G.secret) return;
     if (k === 'BACK') {
-      let v = norm(inp.value);
-      if (v.length > 1) inp.value = v.slice(0,-1);
-      else inp.value = G.secret[0] || '';
+      let v = norm(G.currentGuess || '');
+      if (v.length > 1) G.currentGuess = v.slice(0, -1);
+      else G.currentGuess = G.secret[0] || '';
+      renderBoard();
       return;
     }
     if (k === 'ENTER') { submitGuess(); return; }
-    let v = norm(inp.value);
-    if (v.length < G.secret.length) {
-      if (v.length === 0) v = G.secret[0];
-      inp.value = (v + k).slice(0, G.secret.length);
+    let v = norm(G.currentGuess || '');
+    if (v.length === 0) v = G.secret[0] || '';
+    if (v.length < G.secret.length && /^[A-Z]$/.test(k)) {
+      G.currentGuess = (v + k).slice(0, G.secret.length);
+      renderBoard();
     }
   }
 
   function bindInput() {
-    const inp = $('guess-input');
-    inp.addEventListener('input', () => {
-      let v = norm(inp.value);
-      if (!v.startsWith(G.secret[0])) v = G.secret[0] + v.replace(new RegExp('^'+G.secret[0]), '');
-      if (v.length > G.secret.length) v = v.slice(0, G.secret.length);
-      if (v.length === 0) v = G.secret[0];
-      inp.value = v;
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
+      if (tag === 'input' || tag === 'textarea') return;
+      if (e.key === 'Enter') { e.preventDefault(); onKey('ENTER'); return; }
+      if (e.key === 'Backspace') { e.preventDefault(); onKey('BACK'); return; }
+      const k = norm(e.key);
+      if (k.length === 1 && k >= 'A' && k <= 'Z') { e.preventDefault(); onKey(k); }
     });
-    inp.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); submitGuess(); }
-      if (e.key === 'Backspace' && norm(inp.value).length <= 1) {
-        e.preventDefault(); inp.value = G.secret[0];
-      }
-    });
-    $('guess-btn').addEventListener('click', submitGuess);
   }
 
   // --- Init ---

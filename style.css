@@ -69,12 +69,7 @@ header h1 { margin: 0; letter-spacing: 4px; font-size: 2.2rem; color: var(--gold
 
 #message { min-height: 24px; text-align: center; margin: 4px 0 8px; color: #f7e7a9; font-weight: 600; }
 
-#input-area { display: flex; gap: 8px; justify-content: center; margin-bottom: 8px; }
-#guess-input {
-  flex: 1; max-width: 360px; padding: 10px 12px; border-radius: 8px; border: 1px solid #4a3f63;
-  background: #1e1830; color: var(--text); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 3px;
-}
-#guess-input:focus { outline: none; border-color: var(--accent); }
+.hint { text-align: center; color: var(--muted); font-size: .8rem; margin: 8px 0 0; }
 button {
   background: var(--accent); color: #fff; border: none; border-radius: 8px;
   padding: 10px 14px; font-weight: 700; cursor: pointer;
