@@ -41,6 +41,7 @@
 
   // --- State ---
   let WORDS = [];
+  let DICT = null;
   let G = null;
 
   function freshGame() {
@@ -161,7 +162,7 @@
     let raw = norm(cg);
     if (raw.length !== G.secret.length) { setMessage(`Le mot doit faire ${G.secret.length} lettres.`); return; }
     if (raw[0] !== G.secret[0]) { setMessage(`La première lettre doit être ${G.secret[0]}.`); return; }
-    // accept any A-Z word of correct length/first letter (relaxed dictionary for MVP)
+    if (DICT && !DICT.has(raw)) { setMessage(`Mot inconnu du dictionnaire : ${raw}.`); return; }
     G.handsUsed++;
     const fb = feedback(raw, G.secret);
     for (let i=0;i<raw.length;i++) {
@@ -429,10 +430,19 @@
 
   async function init() {
     try {
-      const r = await fetch('words.json');
-      WORDS = await r.json();
+      const rw = await fetch('words.json');
+      WORDS = await rw.json();
     } catch (e) {
       WORDS = ['BALATON','AROMATE','MUSIQUE','CHOSE','PIANO','MAISON','ORANGE','SOURIS','PLAFOND','LUMIERE'];
+    }
+    try {
+      const rd = await fetch('dictionnaire.txt');
+      if (rd.ok) {
+        const txt = await rd.text();
+        DICT = new Set(txt.split(/\r?\n/).map(norm).filter(Boolean));
+      }
+    } catch (e) {
+      DICT = null;
     }
     WORDS = WORDS.map(norm).filter(w => w.length >= 5 && w.length <= 8);
     bindInput();
