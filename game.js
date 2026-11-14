@@ -403,6 +403,9 @@
       arr[0] = G.secret[0];
       G.currentGuess = arr.join('');
       renderBoard();
+      if (!G.currentGuess.includes(' ')) {
+        submitGuess();
+      }
     }
   }
 
