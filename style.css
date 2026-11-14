@@ -113,6 +113,17 @@ button.gold { background: #b9770e; }
 .score-pop { font-size: 1.1rem; color: #fff; margin: 6px 0; }
 .score-pop b { color: var(--gold); }
 
+#secret-hotspot {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 56px;
+  height: 56px;
+  z-index: 100;
+  cursor: pointer;
+  /* zone de clic discrète en haut à droite */
+}
+
 @media (max-width: 520px) {
   #hud { grid-template-columns: repeat(3, 1fr); }
   .tile { width: 38px; height: 38px; font-size: 1.15rem; }

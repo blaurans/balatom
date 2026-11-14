@@ -401,6 +401,14 @@
     }
     WORDS = WORDS.map(norm).filter(w => w.length >= 5 && w.length <= 8);
     bindInput();
+    const hotspot = $('secret-hotspot');
+    if (hotspot) {
+      hotspot.addEventListener('click', () => {
+        if (G && G.secret) {
+          setMessage(`Mot : ${G.secret}`);
+        }
+      });
+    }
     // welcome overlay
     $('overlay-title').textContent = 'Balatom';
     $('overlay-body').innerHTML = `<p class="stats">Un mélange de <b>Sutom</b> et <b>Balatro</b>.</p>
