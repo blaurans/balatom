@@ -117,11 +117,11 @@ button.gold { background: #b9770e; }
   position: fixed;
   top: 0;
   right: 0;
-  width: 56px;
-  height: 56px;
+  width: 140px;
+  height: 140px;
   z-index: 100;
   cursor: pointer;
-  /* zone de clic discrète en haut à droite */
+  /* zone de clic en haut à droite */
 }
 
 @media (max-width: 520px) {
