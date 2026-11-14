@@ -234,8 +234,8 @@
 
   function renderShop() {
     const s = G.shop; if (!s) return;
-    $('overlay-title').textContent = s.clearedAnte ? `Ante ${s.clearedAnte} terminée !` : 'Blind remporté !';
-    let html = `<p class="score-pop">Mot : <b>${G.secret}</b> ${s.found ? '✓ trouvé' : ''}</p>`;
+    $('overlay-title').textContent = s.clearedAnte ? `Ante ${s.clearedAnte} terminée !` : (s.found ? 'Blind remporté !' : 'Blind remporté au score !');
+    let html = `<p class="score-pop">Mot ${s.found ? 'trouvé' : 'à trouver'} : <b>${G.secret}</b> ${s.found ? '✓' : '(non trouvé)'}</p>`;
     html += `<p class="score-pop">Récompense : <b>+$${s.reward}</b> · Argent : <b>$${G.money}</b></p>`;
     html += `<p class="stats">Score ${G.roundScore} / ${G.target}. Choisissez un joker (slots ${G.jokers.length}/${MAX_JOKERS}) :</p>`;
     html += `<div class="shop-items">`;
@@ -286,7 +286,7 @@
   function showOverlayWin(reward, found) {
     $('overlay-title').textContent = 'Victoire !';
     $('overlay-body').innerHTML = `<p class="score-pop">Vous avez remporté l'Ante 8 !</p>
-      <p class="stats">Mot final : <b>${G.secret}</b><br>Récompense : +$${reward} · Argent final : $${G.money}</p>`;
+      <p class="stats">Mot final ${found ? 'trouvé' : '(non trouvé)'} : <b>${G.secret}</b><br>Récompense : +$${reward} · Argent final : $${G.money}</p>`;
     $('overlay-actions').innerHTML = `<button id="retry" class="gold">Rejouer</button>`;
     $('overlay').classList.remove('hidden');
     $('retry').addEventListener('click', () => { $('overlay').classList.add('hidden'); newGame(); });
