@@ -160,8 +160,17 @@
     if (G.roundScore >= G.target) {
       endBlind(true, found);
     } else if (found) {
-      if (G.handsUsed >= G.handsMax) endBlind(false, true);
-      else { G.currentGuess = G.secret[0]; renderBoard(); }
+      if (G.handsUsed >= G.handsMax) {
+        endBlind(false, true);
+      } else {
+        // Mot trouvé : on en choisit un nouveau pour continuer à marquer dans le même blind
+        G.secret = chooseSecret(G.boss);
+        G.guesses = [];
+        G.keyState = {};
+        G.currentGuess = G.secret[0];
+        renderAll();
+        setMessage(`Mot trouvé ! Nouveau mot de ${G.secret.length} lettres. Première lettre : ${G.secret[0]}`);
+      }
     } else if (G.handsUsed >= G.handsMax) {
       endBlind(false, false);
     } else {
