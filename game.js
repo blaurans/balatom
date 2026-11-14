@@ -88,6 +88,23 @@
   }
 
   // --- Round / flow ---
+  function emptyGuess(len, first) {
+    let a = Array(len).fill(' ');
+    a[0] = first;
+    return a.join('');
+  }
+
+  function nextGuessFromLast(secret, lastGuess) {
+    let a = Array(secret.length).fill(' ');
+    a[0] = secret[0];
+    if (lastGuess && lastGuess.fb) {
+      for (let i = 1; i < secret.length; i++) {
+        if (lastGuess.fb[i] === 'correct') a[i] = lastGuess.word[i];
+      }
+    }
+    return a.join('');
+  }
+
   function startBlind() {
     G.roundScore = 0;
     G.handsUsed = 0;
@@ -104,7 +121,7 @@
     G.handsMax = hands;
     G.secret = chooseSecret(G.boss);
     G.target = targetFor(G.ante, G.blindIdx, G.boss);
-    G.currentGuess = G.secret[0];
+    G.currentGuess = emptyGuess(G.secret.length, G.secret[0]);
     renderAll();
     setMessage(`Mot de ${G.secret.length} lettres. Première lettre : ${G.secret[0]}`);
   }
@@ -139,7 +156,9 @@
   function submitGuess() {
     if (G.over || G.wonRun || G.shop) return;
     if (G.handsUsed >= G.handsMax) return;
-    let raw = norm(G.currentGuess || '');
+    let cg = (G.currentGuess || '');
+    if (cg.length !== G.secret.length || cg.includes(' ')) { setMessage(`Le mot doit faire ${G.secret.length} lettres.`); return; }
+    let raw = norm(cg);
     if (raw.length !== G.secret.length) { setMessage(`Le mot doit faire ${G.secret.length} lettres.`); return; }
     if (raw[0] !== G.secret[0]) { setMessage(`La première lettre doit être ${G.secret[0]}.`); return; }
     // accept any A-Z word of correct length/first letter (relaxed dictionary for MVP)
@@ -152,7 +171,8 @@
     }
     const sc = scoreGuess(raw, fb);
     G.roundScore += sc.total;
-    G.guesses.push({ word: raw, fb, score: sc.total, detail: sc.detail });
+    const guessObj = { word: raw, fb, score: sc.total, detail: sc.detail };
+    G.guesses.push(guessObj);
     renderAll();
     setMessage(sc.detail);
 
@@ -167,14 +187,14 @@
         G.secret = chooseSecret(G.boss);
         G.guesses = [];
         G.keyState = {};
-        G.currentGuess = G.secret[0];
+        G.currentGuess = emptyGuess(G.secret.length, G.secret[0]);
         renderAll();
         setMessage(`Mot trouvé ! Nouveau mot de ${G.secret.length} lettres. Première lettre : ${G.secret[0]}`);
       }
     } else if (G.handsUsed >= G.handsMax) {
       endBlind(false, false);
     } else {
-      G.currentGuess = G.secret[0];
+      G.currentGuess = nextGuessFromLast(G.secret, guessObj);
       renderBoard();
     }
   }
@@ -323,11 +343,14 @@
           t.textContent = g.word[c];
           t.classList.add(g.fb[c]);
         } else if (r === G.guesses.length && active) {
-          const cg = (G.currentGuess || G.secret[0] || '').padEnd(len, ' ');
+          const cg = (G.currentGuess || emptyGuess(len, G.secret[0] || ' '));
           const ch = cg[c];
           if (ch && ch !== ' ') t.textContent = ch;
           if (c === 0) t.classList.add('correct');
-          if (c === (G.currentGuess || '').length && (G.currentGuess || '').length < len) t.classList.add('active');
+          // indice visuel : lettre reportée d'une position trouvée (modifiable)
+          if (c > 0 && ch && ch !== ' ' && G.guesses.length > 0 && G.guesses[G.guesses.length-1].fb[c] === 'correct' && ch === G.guesses[G.guesses.length-1].word[c]) {
+            t.classList.add('correct');
+          }
         }
         row.appendChild(t);
       }
@@ -362,18 +385,23 @@
   function onKey(k) {
     if (!G || G.over || G.wonRun || G.shop) return;
     if (!G.secret) return;
+    const len = G.secret.length;
+    let arr = (G.currentGuess && G.currentGuess.length === len ? G.currentGuess : emptyGuess(len, G.secret[0])).split('');
     if (k === 'BACK') {
-      let v = norm(G.currentGuess || '');
-      if (v.length > 1) G.currentGuess = v.slice(0, -1);
-      else G.currentGuess = G.secret[0] || '';
+      for (let i = len - 1; i >= 1; i--) {
+        if (arr[i] !== ' ') { arr[i] = ' '; break; }
+      }
+      G.currentGuess = arr.join('');
       renderBoard();
       return;
     }
     if (k === 'ENTER') { submitGuess(); return; }
-    let v = norm(G.currentGuess || '');
-    if (v.length === 0) v = G.secret[0] || '';
-    if (v.length < G.secret.length && /^[A-Z]$/.test(k)) {
-      G.currentGuess = (v + k).slice(0, G.secret.length);
+    if (/^[A-Z]$/.test(k)) {
+      for (let i = 1; i < len; i++) {
+        if (arr[i] === ' ') { arr[i] = k; break; }
+      }
+      arr[0] = G.secret[0];
+      G.currentGuess = arr.join('');
       renderBoard();
     }
   }
