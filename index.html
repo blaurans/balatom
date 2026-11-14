@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Balatom</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>BALATOM</h1>
+      <p class="subtitle">Sutom × Balatro</p>
+    </header>
+
+    <div id="hud">
+      <div class="hud-item"><span class="label">Ante</span><span id="hud-ante">1</span></div>
+      <div class="hud-item"><span class="label">Blind</span><span id="hud-blind">Petite</span></div>
+      <div class="hud-item"><span class="label">Score</span><span id="hud-score">0 / 300</span></div>
+      <div class="hud-item"><span class="label">Essais</span><span id="hud-hands">0 / 6</span></div>
+      <div class="hud-item money"><span class="label">$</span><span id="hud-money">4</span></div>
+    </div>
+
+    <div id="boss-desc" class="hidden"></div>
+
+    <div id="jokers-bar">
+      <div class="label-row">Jokers <span id="joker-count">(0/5)</span></div>
+      <div id="jokers-list" class="jokers-list"></div>
+    </div>
+
+    <div id="board"></div>
+    <div id="message"></div>
+
+    <div id="input-area">
+      <input id="guess-input" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" />
+      <button id="guess-btn">Valider</button>
+    </div>
+
+    <div id="keyboard"></div>
+
+    <div id="overlay" class="hidden">
+      <div id="overlay-card">
+        <h2 id="overlay-title"></h2>
+        <div id="overlay-body"></div>
+        <div id="overlay-actions"></div>
+      </div>
+    </div>
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>

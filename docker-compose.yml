@@ -1,0 +1,7 @@
+services:
+  balatom:
+    build: .
+    container_name: balatom
+    ports:
+      - "8095:80"
+    restart: unless-stopped
