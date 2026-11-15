@@ -4,12 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Balatom</title>
-  <link rel="stylesheet" href="style.css?v=8" />
+  <link rel="stylesheet" href="style.css?v=9" />
 </head>
 <body>
   <div id="secret-hotspot" title=" " aria-label="Révéler le mot"></div>
   <div id="app">
     <header>
+      <div id="auth-bar">
+        <span id="auth-user" class="hidden"></span>
+        <a id="auth-login" class="auth-btn hidden" href="/auth/google">Se connecter avec Google</a>
+        <button id="auth-logout" class="auth-btn secondary hidden" type="button">Déconnexion</button>
+      </div>
       <h1>BALATOM</h1>
       <p class="subtitle">Sutom × Balatro</p>
     </header>
@@ -43,6 +48,6 @@
       </div>
     </div>
   </div>
-  <script src="game.js?v=8"></script>
+  <script src="game.js?v=9"></script>
 </body>
 </html>

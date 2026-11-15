@@ -428,7 +428,47 @@
     startBlind();
   }
 
+  async function initAuth() {
+    const login = $('auth-login');
+    const logout = $('auth-logout');
+    const user = $('auth-user');
+    if (logout) {
+      logout.addEventListener('click', async () => {
+        try { await fetch('/auth/deconnexion', { method: 'POST' }); } catch (e) {}
+        location.href = '/';
+      });
+    }
+    try {
+      const r = await fetch('/api/me', { cache: 'no-store' });
+      if (r.status === 401) {
+        if (login) login.classList.remove('hidden');
+        if (logout) logout.classList.add('hidden');
+        if (user) user.classList.add('hidden');
+        return { needLogin: true };
+      }
+      if (!r.ok) throw new Error('me');
+      const me = await r.json();
+      if (me && me.auth === false) {
+        if (login) login.classList.add('hidden');
+        if (logout) logout.classList.add('hidden');
+        if (user) user.classList.add('hidden');
+        return { authDisabled: true };
+      }
+      if (user) { user.textContent = me.nom || me.email || 'Connecté'; user.classList.remove('hidden'); }
+      if (logout) logout.classList.remove('hidden');
+      if (login) login.classList.add('hidden');
+      return me;
+    } catch (e) {
+      // en cas d'erreur (ex. serveur statique ancien), on laisse jouer
+      if (login) login.classList.add('hidden');
+      if (logout) logout.classList.add('hidden');
+      if (user) user.classList.add('hidden');
+      return { authDisabled: true };
+    }
+  }
+
   async function init() {
+    const me = await initAuth();
     try {
       const rw = await fetch('words.json');
       WORDS = await rw.json();
@@ -456,16 +496,22 @@
     }
     // welcome overlay
     $('overlay-title').textContent = 'Balatom';
-    $('overlay-body').innerHTML = `<p class="stats">Un mélange de <b>Sutom</b> et <b>Balatro</b>.</p>
-      <ul class="stats">
-        <li>Devinez le mot secret façon Sutom : la première lettre est donnée, <span style="color:#e74c3c">rouge</span> = bien placé, <span style="color:#f1c40f">jaune</span> = présent, bleu = absent.</li>
-        <li>Chaque essai marque des points : <b>Jetons × Multiplicateur</b>. Atteignez le score cible du blind avant d'épuiser vos essais.</li>
-        <li>Trouvez le mot pour un bonus ! Entre les blinds, achetez des <b>jokers</b> qui modifient le scoring.</li>
-        <li>Gagnez l'Ante 8 pour remporter la partie.</li>
-      </ul>`;
-    $('overlay-actions').innerHTML = `<button id="start" class="gold">Jouer</button>`;
+    if (me && me.needLogin) {
+      $('overlay-body').innerHTML = `<p class="stats">Connectez-vous avec Google pour jouer à <b>Balatom</b> (Sutom × Balatro).</p>`;
+      $('overlay-actions').innerHTML = `<a class="auth-btn" href="/auth/google">Se connecter avec Google</a>`;
+    } else {
+      const who = (me && me.nom && me.auth !== false && !me.authDisabled) ? `<p class="stats">Bonjour <b>${me.nom}</b> ! Un mélange de <b>Sutom</b> et <b>Balatro</b>.</p>` : `<p class="stats">Un mélange de <b>Sutom</b> et <b>Balatro</b>.</p>`;
+      $('overlay-body').innerHTML = `${who}
+        <ul class="stats">
+          <li>Devinez le mot secret façon Sutom : la première lettre est donnée, <span style="color:#e74c3c">rouge</span> = bien placé, <span style="color:#f1c40f">jaune</span> = présent, bleu = absent.</li>
+          <li>Chaque essai marque des points : <b>Jetons × Multiplicateur</b>. Atteignez le score cible du blind avant d'épuiser vos essais.</li>
+          <li>Trouvez le mot pour un bonus ! Entre les blinds, achetez des <b>jokers</b> qui modifient le scoring.</li>
+          <li>Gagnez l'Ante 8 pour remporter la partie.</li>
+        </ul>`;
+      $('overlay-actions').innerHTML = `<button id="start" class="gold">Jouer</button>`;
+      $('start').addEventListener('click', () => { $('overlay').classList.add('hidden'); newGame(); });
+    }
     $('overlay').classList.remove('hidden');
-    $('start').addEventListener('click', () => { $('overlay').classList.add('hidden'); newGame(); });
   }
 
   init();

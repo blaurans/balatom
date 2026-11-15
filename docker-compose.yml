@@ -2,6 +2,12 @@ services:
   balatom:
     build: .
     container_name: balatom
-    ports:
-      - "8095:80"
     restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      PORT: "3000"
+      APP_BASE_URL: https://balatom.laurans.org
+    ports:
+      - "8095:3000"
